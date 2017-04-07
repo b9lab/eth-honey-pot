@@ -12,8 +12,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.5.0",
+    "truffle-contract": "^2.0.0"
   },
   "devDependencies": {
+    "ethereumjs-testrpc": "^3.0.3",
     "truffle": "^3.2.1"
   }
 }
