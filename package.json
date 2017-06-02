@@ -13,7 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "bluebird": "^3.5.0",
-    "truffle-contract": "^2.0.0"
+    "truffle-contract": "^2.0.0",
+    "web3": "^0.18.4"
   },
   "devDependencies": {
     "ethereumjs-testrpc": "^3.0.3",
