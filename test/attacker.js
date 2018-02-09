@@ -1,6 +1,7 @@
 const Promise = require("bluebird");
 const HoneyPot = artifacts.require("./HoneyPot.sol");
 const Attacker = artifacts.require("./Attacker.sol");
+const sequentialPromise = require("./sequentialPromise.js");
 
 /**
  * We use the real contract deployed, not the Solidity code that we happen to compile on our local machine.
@@ -28,10 +29,10 @@ contract("Attacker", function(accounts) {
             .then(created => attacker = created);
     });
 
-    [  1, 2, 100 ].forEach(swipeCount => {
+    [  1, 2, 60 ].forEach(swipeCount => {
         
         it("should be possible to steal in " + swipeCount + " swipes", function() {
-            this.slow(1000);
+            this.slow(2000);
             let balanceThiefBefore;
             return web3.eth.getBalancePromise(thief)
                 .then(balance => {
@@ -43,17 +44,17 @@ contract("Attacker", function(accounts) {
                     // To steal the whole balance in 2 swipes, we need to put in
                     // half of the same amount first.
                     { from: thief, value: balance.dividedBy(swipeCount), gas: 4000000 }))
-                .then(txObject => Promise.all([
-                    web3.eth.getBalancePromise(honeyPot.address),
-                    web3.eth.getBalancePromise(attacker.address),
-                    web3.eth.getBalancePromise(thief),
-                    web3.eth.getTransactionPromise(txObject.tx),
-                    txObject.receipt
+                .then(txObject => sequentialPromise([
+                    () => web3.eth.getBalancePromise(honeyPot.address),
+                    () => web3.eth.getBalancePromise(attacker.address),
+                    () => web3.eth.getBalancePromise(thief),
+                    () => web3.eth.getTransactionPromise(txObject.tx),
+                    () => txObject.receipt
                 ]))
                 .then(results => {
                     assert.strictEqual(results[0].toString(10), "0");
                     assert.strictEqual(results[1].toString(10), "0");
-                    var balanceThiefAfter = balanceThiefBefore
+                    const balanceThiefAfter = balanceThiefBefore
                         // The gas cost
                         .minus(results[4].gasUsed * results[3].gasPrice)
                         // The honey pot's balance
@@ -62,15 +63,40 @@ contract("Attacker", function(accounts) {
                 });
         });
 
+    });
 
-
-
-
-
-
-
-
-
+    it("should be possible to steal 15k with 500 outlay and 500k gas", function() {
+        this.slow(2000);
+            let balanceThiefBefore;
+            return web3.eth.getBalancePromise(thief)
+                .then(balance => {
+                    balanceThiefBefore = balance;
+                    return web3.eth.getBalancePromise(honeyPot.address);
+                })
+                .then(balance => attacker.attack(
+                    honeyPot.address,
+                    // To steal the whole balance in 2 swipes, we need to put in
+                    // half of the same amount first.
+                    { from: thief, value: 500, gas: 4000000 }))
+                .then(txObject => sequentialPromise([
+                    () => web3.eth.getBalancePromise(honeyPot.address),
+                    () => web3.eth.getBalancePromise(attacker.address),
+                    () => web3.eth.getBalancePromise(thief),
+                    () => web3.eth.getTransactionPromise(txObject.tx),
+                    () => txObject.receipt
+                ]))
+                .then(results => {
+                    assert.strictEqual(results[0].toString(10), "0");
+                    assert.strictEqual(results[1].toString(10), "0");
+                    const balanceThiefAfter = balanceThiefBefore
+                        // The gas cost
+                        .minus(results[4].gasUsed * results[3].gasPrice)
+                        // The honey pot's balance
+                        .plus(loot);
+                    assert.strictEqual(results[2].toString(10), balanceThiefAfter.toString(10));
+                    assert.isAtLeast(results[4].gasUsed, 524200);
+                    assert.isAtMost(results[4].gasUsed, 524300);
+                });
     });
 
 });

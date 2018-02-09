@@ -49,8 +49,8 @@ contract("StealthTransfer", function(accounts) {
             this.slow(100);
             return stealth.kill(beneficiary, { from: owner, gas: 3000000 })
                 .then(txObject => sequentialPromise([
-                    web3.eth.getBalancePromise(stealth.address),
-                    web3.eth.getBalancePromise(beneficiary)
+                    () => web3.eth.getBalancePromise(stealth.address),
+                    () => web3.eth.getBalancePromise(beneficiary)
                 ]))
                 .then(results => {
                         assert.strictEqual(results[0].toString(10), "0");
@@ -62,8 +62,8 @@ contract("StealthTransfer", function(accounts) {
             this.slow(100);
             return stealth.kill(beneficiary, { from: owner, value: 200 })
                 .then(txObject => sequentialPromise([
-                    web3.eth.getBalancePromise(stealth.address),
-                    web3.eth.getBalancePromise(beneficiary)
+                    () => web3.eth.getBalancePromise(stealth.address),
+                    () => web3.eth.getBalancePromise(beneficiary)
                 ]))
                 .then(results => {
                         assert.strictEqual(results[0].toString(10), "0");
