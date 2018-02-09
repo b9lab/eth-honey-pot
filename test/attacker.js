@@ -29,9 +29,14 @@ contract("Attacker", function(accounts) {
             .then(created => attacker = created);
     });
 
-    [  1, 2, 60 ].forEach(swipeCount => {
+    [
+        { bait: 15000, floorGas:  77150, ceilGas:  77300, hooks:  2 },
+        { bait:  7500, floorGas:  93000, ceilGas:  93100, hooks:  3 },
+        { bait:   500, floorGas: 536050, ceilGas: 536150, hooks: 31 },
+        { bait:   300, floorGas: 852500, ceilGas: 852600, hooks: 51 }
+    ].forEach(situation => {
         
-        it("should be possible to steal in " + swipeCount + " swipes", function() {
+        it.only("should be possible to steal 15k with " + situation.bait, function() {
             this.slow(2000);
             let balanceThiefBefore;
             return web3.eth.getBalancePromise(thief)
@@ -43,7 +48,7 @@ contract("Attacker", function(accounts) {
                     honeyPot.address,
                     // To steal the whole balance in 2 swipes, we need to put in
                     // half of the same amount first.
-                    { from: thief, value: balance.dividedBy(swipeCount), gas: 4000000 }))
+                    { from: thief, value: situation.bait, gas: 4000000 }))
                 .then(txObject => sequentialPromise([
                     () => web3.eth.getBalancePromise(honeyPot.address),
                     () => web3.eth.getBalancePromise(attacker.address),
@@ -60,43 +65,12 @@ contract("Attacker", function(accounts) {
                         // The honey pot's balance
                         .plus(loot);
                     assert.strictEqual(results[2].toString(10), balanceThiefAfter.toString(10));
+                    assert.isAtLeast(results[4].gasUsed, situation.floorGas);
+                    assert.isAtMost(results[4].gasUsed, situation.ceilGas);
+                    assert.strictEqual(results[4].logs.length, situation.hooks);
                 });
         });
 
-    });
-
-    it("should be possible to steal 15k with 500 outlay and 500k gas", function() {
-        this.slow(2000);
-            let balanceThiefBefore;
-            return web3.eth.getBalancePromise(thief)
-                .then(balance => {
-                    balanceThiefBefore = balance;
-                    return web3.eth.getBalancePromise(honeyPot.address);
-                })
-                .then(balance => attacker.attack(
-                    honeyPot.address,
-                    // To steal the whole balance in 2 swipes, we need to put in
-                    // half of the same amount first.
-                    { from: thief, value: 500, gas: 4000000 }))
-                .then(txObject => sequentialPromise([
-                    () => web3.eth.getBalancePromise(honeyPot.address),
-                    () => web3.eth.getBalancePromise(attacker.address),
-                    () => web3.eth.getBalancePromise(thief),
-                    () => web3.eth.getTransactionPromise(txObject.tx),
-                    () => txObject.receipt
-                ]))
-                .then(results => {
-                    assert.strictEqual(results[0].toString(10), "0");
-                    assert.strictEqual(results[1].toString(10), "0");
-                    const balanceThiefAfter = balanceThiefBefore
-                        // The gas cost
-                        .minus(results[4].gasUsed * results[3].gasPrice)
-                        // The honey pot's balance
-                        .plus(loot);
-                    assert.strictEqual(results[2].toString(10), balanceThiefAfter.toString(10));
-                    assert.isAtLeast(results[4].gasUsed, 524200);
-                    assert.isAtMost(results[4].gasUsed, 524300);
-                });
     });
 
 });

