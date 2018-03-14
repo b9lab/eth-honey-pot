@@ -8,7 +8,7 @@ contract HoneyPot {
     }
 
     function put() payable {
-        balances[msg.sender] = msg.value;
+        balances[msg.sender] =+ msg.value;
     }
 
     function get() {
