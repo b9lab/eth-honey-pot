@@ -50,8 +50,9 @@
     "3": {
       "events": {},
       "links": {},
-      "address": "0x836d81c4765e7d0368c30fc54d5f67d7ab0b7ea3",
-      "updated_at": 1521057208070
+      "address": "0x518eA24d213C7dE1B7b961302727F6c68A63d2B1",
+      "updated_at": 1525875892625,
+      "transactionHash": "0x74d3f88f36662d7cd092d4fbb95a25bb516bd3030a89fa33f27bddd37e761334"
     }
   },
   "schema_version": "0.0.5",
