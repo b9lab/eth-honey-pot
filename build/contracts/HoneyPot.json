@@ -50,9 +50,9 @@
     "3": {
       "events": {},
       "links": {},
-      "address": "0x518eA24d213C7dE1B7b961302727F6c68A63d2B1",
-      "updated_at": 1525875892625,
-      "transactionHash": "0x74d3f88f36662d7cd092d4fbb95a25bb516bd3030a89fa33f27bddd37e761334"
+      "address": "0xf011277e8379771AC8dD3e987C6F03856B525eEb",
+      "updated_at": 1527617429683,
+      "transactionHash": "0x2bcd1f78812f5f570197fc8dec2a63145f42c68472e8666682db38b0c8c3a50f"
     }
   },
   "schema_version": "0.0.5",
