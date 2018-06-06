@@ -9,10 +9,10 @@ contract("Deployment", function(accounts) {
         }
     });
 
-    it("should have deployed a HoneyPot with 7 Ethers", function() {
+    it("should have deployed a HoneyPot with 5 Ethers", function() {
         return HoneyPot.deployed()
             .then(honeyPot => web3.eth.getBalancePromise(honeyPot.address))
-            .then(balance => assert.strictEqual(balance.toString(10), web3.toWei("7")));
+            .then(balance => assert.strictEqual(balance.toString(10), web3.toWei("5")));
     });
 
     it("should have deployed and killed a StealthTransfer", function() {

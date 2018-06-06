@@ -30,12 +30,12 @@ contract("AttackerQuad", function(accounts) {
     });
 
     [
-        { bait: 15000, floorGas:  89600, ceilGas:  89750, hooks:  2 },
-        { bait:  1500, floorGas: 261200, ceilGas: 261300, hooks:  8 },
-        { bait:   500, floorGas: 318350, ceilGas: 318500, hooks: 10 },
-        { bait:   100, floorGas: 489950, ceilGas: 490050, hooks: 16 },
-        { bait:     5, floorGas: 718700, ceilGas: 718800, hooks: 24 },
-        { bait:     1, floorGas: 833050, ceilGas: 833150, hooks: 28 }
+        { bait: 15000, floorGas:  88600, ceilGas:  89750, hooks:  2 },
+        { bait:  1500, floorGas: 258500, ceilGas: 261300, hooks:  8 },
+        { bait:   500, floorGas: 315100, ceilGas: 318500, hooks: 10 },
+        { bait:   100, floorGas: 485000, ceilGas: 490050, hooks: 16 },
+        { bait:     5, floorGas: 711500, ceilGas: 718800, hooks: 24 },
+        { bait:     1, floorGas: 824800, ceilGas: 833150, hooks: 28 }
     ].forEach(situation => {
         
         it("should be possible to steal 15k with " + situation.bait, function() {

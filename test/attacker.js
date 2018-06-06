@@ -30,13 +30,13 @@ contract("Attacker", function(accounts) {
     });
 
     [
-        { bait: 15000, floorGas:  77150, ceilGas:  77300, hooks:  2 },
-        { bait:  7500, floorGas:  93000, ceilGas:  93100, hooks:  3 },
-        { bait:   500, floorGas: 536050, ceilGas: 536150, hooks: 31 },
-        { bait:   300, floorGas: 852500, ceilGas: 852600, hooks: 51 }
+        { bait: 15000, floorGas:  76200, ceilGas:  77300, hooks:  2 },
+        { bait:  7500, floorGas:  91900, ceilGas:  93100, hooks:  3 },
+        { bait:   500, floorGas: 528800, ceilGas: 536150, hooks: 31 },
+        { bait:   300, floorGas: 840900, ceilGas: 852600, hooks: 51 }
     ].forEach(situation => {
         
-        it.only("should be possible to steal 15k with " + situation.bait, function() {
+        it("should be possible to steal 15k with " + situation.bait, function() {
             this.slow(2000);
             let balanceThiefBefore;
             return web3.eth.getBalancePromise(thief)
