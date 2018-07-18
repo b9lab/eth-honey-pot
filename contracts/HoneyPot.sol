@@ -1,9 +1,9 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 contract HoneyPot {
     mapping (address => uint) public balances;
 
-    function HoneyPot() payable public {
+    constructor() payable public {
         put();
     }
 
