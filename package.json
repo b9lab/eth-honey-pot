@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "ganache-cli": "6.1.0",
-    "truffle": "4.1.5",
+    "truffle": "4.1.13",
     "truffle-artifactor": "^2.1.4"
   }
 }
