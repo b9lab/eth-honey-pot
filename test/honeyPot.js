@@ -1,12 +1,11 @@
-const Promise = require("bluebird");
 const HoneyPot = artifacts.require("./HoneyPot.sol");
+const sequentialPromise = require("./sequentialPromise.js");
 
 contract("HoneyPot", function(accounts) {
     let owner;
 
     before("should prepare accounts", function() {
         owner = accounts[0];
-        Promise.promisifyAll(web3.eth, { suffix: "Promise" });
     });
 
     describe("deploy", function() {
@@ -14,26 +13,26 @@ contract("HoneyPot", function(accounts) {
         it("should be possible to deploy without balance", function() {
             this.slow(100);
             return HoneyPot.new({ from: owner })
-                .then(honeyPot => Promise.all([
-                    web3.eth.getBalancePromise(honeyPot.address),
-                    honeyPot.balances(owner)
+                .then(honeyPot => sequentialPromise([
+                    () => web3.eth.getBalance(honeyPot.address),
+                    () => honeyPot.balances(owner)
                 ]))
                 .then(results => {
-                        assert.strictEqual(results[0].toString(10), "0");
-                        assert.strictEqual(results[1].toString(10), "0");                
+                    assert.strictEqual(results[0].toString(10), "0");
+                    assert.strictEqual(results[1].toString(10), "0");                
                 });
         });
 
         it("should record the deployers balance", function() {
             this.slow(100);
             return HoneyPot.new({ from: owner, value: 1000 })
-                .then(honeyPot => Promise.all([
-                    web3.eth.getBalancePromise(honeyPot.address),
-                    honeyPot.balances(owner)
+                .then(honeyPot => sequentialPromise([
+                    () => web3.eth.getBalance(honeyPot.address),
+                    () => honeyPot.balances(owner)
                 ]))
                 .then(results => {
-                        assert.strictEqual(results[0].toString(10), "1000");
-                        assert.strictEqual(results[1].toString(10), "1000");                
+                    assert.strictEqual(results[0].toString(10), "1000");
+                    assert.strictEqual(results[1].toString(10), "1000");                
                 });
         });
 
@@ -50,9 +49,9 @@ contract("HoneyPot", function(accounts) {
         it("should be possible to put", function() {
             this.slow(100);
             return honeyPot.put({ from: owner, value: 1000 })
-                .then(txObject => Promise.all([
-                    web3.eth.getBalancePromise(honeyPot.address),
-                    honeyPot.balances(owner)
+                .then(txObject => sequentialPromise([
+                    () => web3.eth.getBalance(honeyPot.address),
+                    () => honeyPot.balances(owner)
                 ]))
                 .then(results => {
                     assert.strictEqual(results[0].toString(10), "1000");
@@ -64,9 +63,9 @@ contract("HoneyPot", function(accounts) {
             this.slow(200);
             return honeyPot.put({ from: owner, value: 1000 })
                 .then(txObject => honeyPot.put({ from: owner, value: 500 }))
-                .then(txObject => Promise.all([
-                    web3.eth.getBalancePromise(honeyPot.address),
-                    honeyPot.balances(owner)
+                .then(txObject => sequentialPromise([
+                    () => web3.eth.getBalance(honeyPot.address),
+                    () => honeyPot.balances(owner)
                 ]))
                 .then(results => {
                     assert.strictEqual(results[0].toString(10), "1500");
@@ -87,13 +86,13 @@ contract("HoneyPot", function(accounts) {
         it("should overwrite the deployers balance after a put", function() {
             this.slow(100);
             return honeyPot.put({ from: owner, value: 500 })
-                .then(txObject => Promise.all([
-                    web3.eth.getBalancePromise(honeyPot.address),
-                    honeyPot.balances(owner)
+                .then(txObject => sequentialPromise([
+                    () => web3.eth.getBalance(honeyPot.address),
+                    () => honeyPot.balances(owner)
                 ]))
                 .then(results => {
-                        assert.strictEqual(results[0].toString(10), "1500");
-                        assert.strictEqual(results[1].toString(10), "500");                
+                    assert.strictEqual(results[0].toString(10), "1500");
+                    assert.strictEqual(results[1].toString(10), "500");                
                 });
         });
 
@@ -113,24 +112,24 @@ contract("HoneyPot", function(accounts) {
         it("should be possible to get what was put", function() {
             this.slow(300);
             let balanceBefore;
-            return web3.eth.getBalancePromise(owner)
+            return web3.eth.getBalance(owner)
                 .then(balance => {
-                    balanceBefore = balance;
+                    balanceBefore = web3.utils.toBN(balance);
                     return honeyPot.get({ from: owner });
                 })
-                .then(txObject => Promise.all([
-                    web3.eth.getBalancePromise(honeyPot.address),
-                    honeyPot.balances(owner),
-                    web3.eth.getBalancePromise(owner),
-                    web3.eth.getTransaction(txObject.tx),
-                    txObject.receipt
+                .then(txObject => sequentialPromise([
+                    () => web3.eth.getBalance(honeyPot.address),
+                    () => honeyPot.balances(owner),
+                    () => web3.eth.getBalance(owner),
+                    () => web3.eth.getTransaction(txObject.tx),
+                    () => txObject.receipt
                 ]))
                 .then(results => {
                     assert.strictEqual(results[0].toString(10), "0");
                     assert.strictEqual(results[1].toString(10), "0");
                     var balanceAfter = balanceBefore
-                        .minus(results[4].gasUsed * results[3].gasPrice)
-                        .plus(1000);
+                        .sub(web3.utils.toBN(results[4].gasUsed * results[3].gasPrice))
+                        .add(web3.utils.toBN("1000"));
                     assert.strictEqual(results[2].toString(10), balanceAfter.toString(10));
                 });  
         });
@@ -139,24 +138,24 @@ contract("HoneyPot", function(accounts) {
             this.slow(300);
             let balanceBefore;
             return honeyPot.put({ from: owner, value: 500 })
-                .then(txObject => web3.eth.getBalancePromise(owner))
+                .then(txObject => web3.eth.getBalance(owner))
                 .then(balance => {
-                    balanceBefore = balance;
+                    balanceBefore = web3.utils.toBN(balance);
                     return honeyPot.get({ from: owner });
                 })
-                .then(txObject => Promise.all([
-                    web3.eth.getBalancePromise(honeyPot.address),
-                    honeyPot.balances(owner),
-                    web3.eth.getBalancePromise(owner),
-                    web3.eth.getTransaction(txObject.tx),
-                    txObject.receipt
+                .then(txObject => sequentialPromise([
+                    () => web3.eth.getBalance(honeyPot.address),
+                    () => honeyPot.balances(owner),
+                    () => web3.eth.getBalance(owner),
+                    () => web3.eth.getTransaction(txObject.tx),
+                    () => txObject.receipt
                 ]))
                 .then(results => {
                     assert.strictEqual(results[0].toString(10), "1000");
                     assert.strictEqual(results[1].toString(10), "0");
                     var balanceAfter = balanceBefore
-                        .minus(results[4].gasUsed * results[3].gasPrice)
-                        .plus(500);
+                        .sub(web3.utils.toBN(results[4].gasUsed * results[3].gasPrice))
+                        .add(web3.utils.toBN("500"));
                     assert.strictEqual(results[2].toString(10), balanceAfter.toString(10));
                 });  
         });

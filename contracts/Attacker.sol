@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 import "./HoneyPot.sol";
 
@@ -11,7 +11,7 @@ contract Attacker {
         msg.sender.transfer(address(this).balance);
     }
 
-    function() payable public {
+    function() payable external {
         assembly {
             // The cheapest logging I could think of.
             log0(0, 0)

@@ -1,7 +1,7 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 contract StealthTransfer {
-    function kill(address beneficiary) payable public {
+    function kill(address payable beneficiary) payable public {
         selfdestruct(beneficiary);
     }
 }

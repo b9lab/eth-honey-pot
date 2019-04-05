@@ -1,5 +1,3 @@
-const Promise = require("bluebird");
-
 /**
  * @param {!Array.<function.Promise.<Any>>} promiseArray.
  * @returns {!Promise.<Array.<Any>>} The results of the promises passed to the function.

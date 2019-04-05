@@ -9,4 +9,4 @@ Steal those 5 Ethers at https://ropsten.etherscan.io/address/0x836D81C4765e7D036
 
 ## Notes
 
-* Yes, in `function put`, there is a typo `=+`, do not fix it.
+* Yes, in `function put`, there is a typo `=`, do not fix it.

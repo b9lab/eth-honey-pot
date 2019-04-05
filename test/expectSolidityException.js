@@ -1,6 +1,6 @@
 module.exports = function(web3Promisified) {
     return function (promise, gasToUse) {
-        return promise
+        return promise()
             .then(function (txn) {
                 if (typeof txn === "object") {
                     // We have a txObject
@@ -15,7 +15,8 @@ module.exports = function(web3Promisified) {
             .catch(function (e) {
                 if ((e.message).search("invalid JUMP") > -1||
                     (e.message).search("out of gas") > -1 ||
-                    (e.message).search("invalid opcode") > -1) {
+                    (e.message).search("invalid opcode") > -1 ||
+                    (e.message).search("revert") > -1) {
                     // We are in TestRPC
                 } else if ((e.message).search("please check your gas amount") > -1) {
                     // We are in Geth for a deployment

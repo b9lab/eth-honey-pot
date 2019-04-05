@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 contract HoneyPot {
     mapping (address => uint) public balances;
@@ -12,16 +12,17 @@ contract HoneyPot {
 
     function put() payable public {
         emit LogPut(msg.sender, msg.value);
-        balances[msg.sender] =+ msg.value;
+        balances[msg.sender] = msg.value;
     }
 
     function get() public {
         emit LogGot(msg.sender, balances[msg.sender]);
-        require(msg.sender.call.value(balances[msg.sender])());
+        (bool success,) = msg.sender.call.value(balances[msg.sender])("");
+        require(success);
         balances[msg.sender] = 0;
     }
 
-    function() private {
+    function() external {
         revert();
     }
 }

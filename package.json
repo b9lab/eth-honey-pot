@@ -12,13 +12,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bluebird": "3.5.1",
-    "truffle-contract": "3.0.4",
-    "web3": "0.20.6"
+    "truffle-contract": "4.0.11",
+    "web3": "1.0.0-beta.52"
   },
   "devDependencies": {
     "ganache-cli": "6.1.0",
-    "truffle": "4.1.13",
-    "truffle-artifactor": "^2.1.4"
+    "truffle": "5.0.8",
+    "truffle-artifactor": "4.0.10"
   }
 }
