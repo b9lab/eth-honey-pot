@@ -2274,9 +2274,9 @@
     "3": {
       "events": {},
       "links": {},
-      "address": "0x6e53AEbe674ECA2719161FBF709d4Fc6617B97A8",
-      "updated_at": 1545938685903,
-      "transactionHash": "0x91bfdc72ea4848906dd5e890cd92fd908f380cdccb152b97315e1fa88df60697"
+      "address": "0xE308981575820FE85AD22C5514B61c8288993b10",
+      "updated_at": 1556816111453,
+      "transactionHash": "0x55615cbdf40954107d6fbe1abd70aa97b6f44ab47fe36a878af3104a0cc0fcad"
     }
   },
   "schemaVersion": "3.0.6",
