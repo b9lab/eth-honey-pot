@@ -3,20 +3,18 @@ const HoneyPot = artifacts.require("./HoneyPot.sol");
 const sequentialPromise = require("./sequentialPromise.js");
 const expectSolidityException = require("./expectSolidityException.js")(web3);
 
-contract("StealthTransfer", function(accounts) {
-    let owner, beneficiary;
+const { toBN } = web3.utils;
 
-    before("should prepare accounts", function() {
-        [ owner, beneficiary ] = accounts;
-    });
+contract("StealthTransfer", function(accounts) {
+    const [ owner, beneficiary ] = accounts;
 
     describe("deploy", function() {
 
-        it("should be possible to deploy without payment", function() {
+        it("should be possible to deploy without payment", async function() {
             this.slow(100);
-            return StealthTransfer.new({ from: owner })
-                .then(stealth => web3.eth.getCode(stealth.address))
-                .then(code => assert.isAtLeast(code.length, 50));
+            const stealth = await StealthTransfer.new({ from: owner });
+            const code = await web3.eth.getCode(stealth.address);
+            assert.isAtLeast(code.length, 50);
         });
 
         it("should not be possible to deploy with payment", function() {
@@ -32,45 +30,35 @@ contract("StealthTransfer", function(accounts) {
 
         let stealth, beneficiaryBalanceBefore;
 
-        beforeEach("should deploy and pick the beneficiary balance", function() {
-            return StealthTransfer.new({ from: owner })
-                .then(instance => stealth = instance)
-                .then(() => web3.eth.getBalance(beneficiary))
-                .then(balance => beneficiaryBalanceBefore = web3.utils.toBN(balance));
+        beforeEach("should deploy and pick the beneficiary balance", async function() {
+            stealth = await StealthTransfer.new({ from: owner });
+            beneficiaryBalanceBefore = toBN(await web3.eth.getBalance(beneficiary));
         });
 
-        it("should be possible to kill without payment", function() {
+        it("should be possible to kill without payment", async function() {
             this.slow(100);
-            return stealth.kill(beneficiary, { from: owner, gas: 3000000 })
-                .then(txObject => sequentialPromise([
-                    () => web3.eth.getBalance(stealth.address),
-                    () => web3.eth.getBalance(beneficiary)
-                ]))
-                .then(results => {
-                    assert.strictEqual(results[0].toString(10), "0");
-                    assert.strictEqual(results[1].toString(10), beneficiaryBalanceBefore.toString(10));
-                });
+            const txObject = await stealth.kill(beneficiary, { from: owner, gas: 3000000 });
+            const stealthBalance = await web3.eth.getBalance(stealth.address);
+            const beneficiaryBalance = await web3.eth.getBalance(beneficiary);
+            assert.strictEqual(stealthBalance.toString(10), "0");
+            assert.strictEqual(beneficiaryBalance.toString(10), beneficiaryBalanceBefore.toString(10));
         });
 
-        it("should be possible to kill with payment", function() {
+        it("should be possible to kill with payment", async function() {
             this.slow(100);
-            return stealth.kill(beneficiary, { from: owner, value: 200 })
-                .then(txObject => sequentialPromise([
-                    () => web3.eth.getBalance(stealth.address),
-                    () => web3.eth.getBalance(beneficiary)
-                ]))
-                .then(results => {
-                    assert.strictEqual(results[0].toString(10), "0");
-                    assert.strictEqual(
-                        results[1].toString(10),
-                        beneficiaryBalanceBefore.add(web3.utils.toBN("200")).toString(10));
-                });
+            await stealth.kill(beneficiary, { from: owner, value: 200 });
+            const stealthBalance = await web3.eth.getBalance(stealth.address);
+            const beneficiaryBalance = await web3.eth.getBalance(beneficiary);
+            assert.strictEqual(stealthBalance.toString(10), "0");
+            assert.strictEqual(
+                beneficiaryBalance.toString(10),
+                beneficiaryBalanceBefore.add(toBN("200")).toString(10));
         });
 
-        it("should be destructed after kill", function() {
-            return stealth.kill(beneficiary, { from: owner, value: 200 })
-                .then(txObject => web3.eth.getCode(stealth.address))
-                .then(code => assert.strictEqual(code, "0x"));
+        it("should be destructed after kill", async function() {
+            await stealth.kill(beneficiary, { from: owner, value: 200 });
+            const code = await web3.eth.getCode(stealth.address);
+            assert.strictEqual(code, "0x");
         });
 
     });

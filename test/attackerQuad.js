@@ -2,6 +2,7 @@ const HoneyPot = artifacts.require("./HoneyPot.sol");
 const Attacker = artifacts.require("./AttackerQuad.sol");
 const sequentialPromise = require("./sequentialPromise.js");
 
+const { toBN } = web3.utils;
 /**
  * We use the real contract deployed, not the Solidity code that we happen to compile on our local machine.
  * Copied from the deployment tx https://ropsten.etherscan.io/tx/0x97f7326d48309feb63baff0cab24b8617e27ce6e7052bab7c6017858d97720c6
@@ -10,20 +11,15 @@ HoneyPot.unlinked_binary = "0x60606040525b61001a6401000000006100a361002082021704
 
 contract("AttackerQuad", function(accounts) {
     const loot = "15000";
-    let owner, thief, honeyPot, attacker;
+    const [ owner, thief ] = accounts;
+    let honeyPot, attacker;
 
-    before("should prepare accounts", function() {
-        [ owner, thief ] = accounts;
+    beforeEach("should deploy a new HoneyPot with value", async function() {
+        honeyPot = await HoneyPot.new({ from: owner, value: loot });
     });
 
-    beforeEach("should deploy a new HoneyPot with value", function() {
-        return HoneyPot.new({ from: owner, value: loot })
-            .then(created => honeyPot = created);
-    });
-
-    beforeEach("should deploy a new Attacker", function() {
-        return Attacker.new({ from: thief })
-            .then(created => attacker = created);
+    beforeEach("should deploy a new Attacker", async function() {
+        attacker = await Attacker.new({ from: thief });
     });
 
     [
@@ -35,39 +31,29 @@ contract("AttackerQuad", function(accounts) {
         { bait:     1, floorGas: 824800, ceilGas: 833150, hooks: 28 }
     ].forEach(situation => {
         
-        it("should be possible to steal 15k with " + situation.bait, function() {
+        it("should be possible to steal 15k with " + situation.bait, async function() {
             this.slow(2500);
-            let balanceThiefBefore;
-            return web3.eth.getBalance(thief)
-                .then(balance => {
-                    balanceThiefBefore = web3.utils.toBN(balance);
-                    return web3.eth.getBalance(honeyPot.address);
-                })
-                .then(balance => attacker.attack(
-                    honeyPot.address,
-                    // To steal the whole balance in 2 swipes, we need to put in
-                    // half of the same amount first.
-                    { from: thief, value: situation.bait, gas: 4000000 }))
-                .then(txObject => sequentialPromise([
-                    () => web3.eth.getBalance(honeyPot.address),
-                    () => web3.eth.getBalance(attacker.address),
-                    () => web3.eth.getBalance(thief),
-                    () => web3.eth.getTransaction(txObject.tx),
-                    () => txObject.receipt
-                ]))
-                .then(results => {
-                    assert.strictEqual(results[0].toString(10), "0");
-                    assert.strictEqual(results[1].toString(10), "0");
-                    const balanceThiefAfter = balanceThiefBefore
-                        // The gas cost
-                        .sub(web3.utils.toBN(results[4].gasUsed * results[3].gasPrice))
-                        // The honey pot's balance
-                        .add(web3.utils.toBN(loot));
-                    assert.strictEqual(results[2].toString(10), balanceThiefAfter.toString(10));
-                    assert.isAtLeast(results[4].gasUsed, situation.floorGas);
-                    assert.isAtMost(results[4].gasUsed, situation.ceilGas);
-                    assert.strictEqual(results[4].rawLogs.length, situation.hooks);
-                });
+            const balanceThiefBefore = toBN(await web3.eth.getBalance(thief));
+            const txObject = await attacker.attack(
+                honeyPot.address,
+                // To steal the whole balance in 2 swipes, we need to put in
+                // half of the same amount first.
+                { from: thief, value: situation.bait, gas: 4000000 });
+            const honeyPotBalance = await web3.eth.getBalance(honeyPot.address);
+            const attackerBalance = await web3.eth.getBalance(attacker.address);
+            const thiefBalance = await web3.eth.getBalance(thief);
+            const tx = await web3.eth.getTransaction(txObject.tx);
+            assert.strictEqual(honeyPotBalance.toString(10), "0");
+            assert.strictEqual(attackerBalance.toString(10), "0");
+            const balanceThiefAfter = balanceThiefBefore
+                // The gas cost
+                .sub(toBN(txObject.receipt.gasUsed * tx.gasPrice))
+                // The honey pot's balance
+                .add(toBN(loot));
+            assert.strictEqual(thiefBalance.toString(10), balanceThiefAfter.toString(10));
+            assert.isAtLeast(txObject.receipt.gasUsed, situation.floorGas);
+            assert.isAtMost(txObject.receipt.gasUsed, situation.ceilGas);
+            assert.strictEqual(txObject.receipt.rawLogs.length, situation.hooks);
         });
 
     });
